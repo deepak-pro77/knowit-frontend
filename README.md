@@ -1,4 +1,4 @@
-# KnowIt AI – frontend (+ Vercel API)
+# KnowIt AI – frontend (+ Vercel API & Works Fine)
 
 React + Vite + TypeScript. The `api/` folder holds a TypeScript port of the Spring Boot
 backend (same endpoints, prompts, schema, safety rules and error codes) that runs as
