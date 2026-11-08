@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from 'react'
 import Capture from './components/Capture'
 import Report from './components/Report'
 import AskPanel from './components/AskPanel'
-import { analyzeImage, contextFromReport, KnowItError } from './lib/api'
+import { analyzeImage, backendInfo, contextFromReport, KnowItError } from './lib/api'
 import type { AnalysisResponse } from './lib/types'
 
 type State =
@@ -13,7 +13,7 @@ type State =
 
 const ERROR_HELP: Record<string, string> = {
   RATE_LIMITED: 'You have sent too many photos in the last minute.',
-  FILE_TOO_LARGE: 'The photo is over the 5 MB limit. Resize it and try again.',
+  FILE_TOO_LARGE: 'The photo is over the upload limit. Pick a smaller one and try again.',
   UNSUPPORTED_TYPE: 'Only JPEG, PNG and WebP photos are accepted.',
   EMPTY_FILE: 'The file was empty. Pick another photo.',
   UNREADABLE: 'The file could not be read. Pick another photo.',
@@ -133,6 +133,15 @@ export default function App() {
         <p>
           KnowIt AI reads a photo and general knowledge. It cannot confirm that anything is safe,
           edible or working. Check the label, the manual, or a qualified person.
+        </p>
+        <p className="foot__backend">
+          Connected to: {backendInfo.label}
+          {backendInfo.overridden && (
+            <>
+              {' '}
+              (<a href="?api=default">switch back</a>)
+            </>
+          )}
         </p>
       </footer>
     </div>

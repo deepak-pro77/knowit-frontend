@@ -891,3 +891,10 @@ a {
   background: var(--paper);
   color: var(--ink);
 }
+
+.foot__backend {
+  margin-top: 8px;
+  font-family: var(--display);
+  font-size: 13px;
+  color: var(--ink-faint);
+}

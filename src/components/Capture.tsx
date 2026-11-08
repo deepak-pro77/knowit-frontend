@@ -1,5 +1,5 @@
 import { useRef, useState, type DragEvent, type ChangeEvent } from 'react'
-import { ACCEPTED_TYPES, MAX_IMAGE_BYTES } from '../lib/api'
+import { ACCEPTED_TYPES, MAX_IMAGE_BYTES, MAX_INPUT_BYTES, shrinkIfNeeded } from '../lib/api'
 import CameraModal from './CameraModal'
 
 // Phones and tablets open their own camera app from a file input with `capture`,
@@ -12,13 +12,12 @@ interface Props {
   disabled?: boolean
 }
 
-function validate(file: File): string | null {
+function checkType(file: File): string | null {
   if (!ACCEPTED_TYPES.includes(file.type)) {
     return 'That file is not a JPEG, PNG or WebP image. Pick a photo in one of those formats.'
   }
-  if (file.size > MAX_IMAGE_BYTES) {
-    const mb = (file.size / 1024 / 1024).toFixed(1)
-    return `That photo is ${mb} MB. The limit is 5 MB, so take a smaller one or resize it.`
+  if (file.size > MAX_INPUT_BYTES) {
+    return 'That photo is over 25 MB. Pick a smaller one.'
   }
   return null
 }
@@ -36,22 +35,29 @@ export default function Capture({ onSelect, disabled }: Props) {
     else setCameraOpen(true)
   }
 
-  function accept(file: File | undefined) {
+  async function accept(file: File | undefined) {
     if (!file) return
-    const problem = validate(file)
+    const problem = checkType(file)
     setError(problem)
-    if (!problem) onSelect(file)
+    if (problem) return
+    // Large phone photos are resized in the browser so they fit the upload limit.
+    const ready = await shrinkIfNeeded(file).catch(() => file)
+    if (ready.size > MAX_IMAGE_BYTES) {
+      setError('That photo is too large to upload even after resizing. Try a smaller one.')
+      return
+    }
+    onSelect(ready)
   }
 
   function onDrop(e: DragEvent) {
     e.preventDefault()
     setOver(false)
     if (disabled) return
-    accept(e.dataTransfer.files?.[0])
+    void accept(e.dataTransfer.files?.[0])
   }
 
   function onChange(e: ChangeEvent<HTMLInputElement>) {
-    accept(e.target.files?.[0])
+    void accept(e.target.files?.[0])
     e.target.value = ''
   }
 
@@ -121,7 +127,7 @@ export default function Capture({ onSelect, disabled }: Props) {
           onClose={() => setCameraOpen(false)}
           onCapture={(file) => {
             setCameraOpen(false)
-            accept(file)
+            void accept(file)
           }}
           onFallback={() => {
             setCameraOpen(false)
@@ -137,7 +143,7 @@ export default function Capture({ onSelect, disabled }: Props) {
       )}
 
       <ul className="capture__rules">
-        <li>JPEG, PNG or WebP, up to 5 MB.</li>
+        <li>JPEG, PNG or WebP. Large photos are resized automatically.</li>
         <li>Photograph one object, not people. Labels and model numbers help a lot.</li>
         <li>Nothing is ever declared safe from a photo. Treat every report as a starting point.</li>
       </ul>

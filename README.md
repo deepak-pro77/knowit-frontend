@@ -1,51 +1,46 @@
-# KnowIt AI – frontend
+# KnowIt AI – frontend (+ Vercel API)
 
-React + Vite + TypeScript client for the KnowIt Spring Boot backend.
+React + Vite + TypeScript. The `api/` folder holds a TypeScript port of the Spring Boot
+backend (same endpoints, prompts, schema, safety rules and error codes) that runs as
+Vercel functions, so the deployed site works on its own.
 
-## Run
+## Which backend is used
+
+| Situation | Backend |
+|---|---|
+| Deployed on Vercel (no `VITE_API_BASE_URL`) | Vercel functions in `api/` |
+| `npm run dev` on your PC | Java backend at `http://localhost:8080` |
+| Open the site with `?api=https://xyz.trycloudflare.com` | That URL (remembered in this browser) |
+| Open the site with `?api=default` | Back to the default |
+
+The footer shows "Connected to: …" so you can always see which one is live.
+
+## Run locally
 
 ```bash
 npm install
-npm run dev        # http://localhost:5173
+npm run dev        # http://localhost:5173, talks to the Java backend on :8080
 ```
 
-The backend's CORS allow-list defaults to `http://localhost:5173`, so the dev
-server is pinned to that port. Start the backend on port 8080 first
-(`./mvnw spring-boot:run` with `GEMINI_API_KEY` set).
+## Deploy on Vercel
 
-To point at a different backend, edit `.env`:
+1. Import the repo (framework: Vite, auto-detected).
+2. Environment variables: `GEMINI_API_KEY` (required), `GEMINI_MODEL` (optional).
+   Do **not** set `VITE_API_BASE_URL`.
+3. Check `https://<site>.vercel.app/api/health` → `{"status":"UP", ...}`.
 
-```
-VITE_API_BASE_URL=https://your-backend.example.com
-```
+## Show the Java backend (laptop + Cloudflare tunnel)
 
-(and add the frontend's origin to `CORS_ALLOWED_ORIGINS` on the backend).
-
-## Build
-
-```bash
-npm run build      # output in dist/
-npm run preview
+```powershell
+$env:CORS_ALLOWED_ORIGINS = "https://<site>.vercel.app,http://localhost:5173"
+.\mvnw.cmd spring-boot:run                      # terminal 1
+cloudflared tunnel --url http://localhost:8080  # terminal 2 → prints https://xyz.trycloudflare.com
 ```
 
-## What it does
+Then open `https://<site>.vercel.app/?api=https://xyz.trycloudflare.com`.
 
-- `POST /api/v1/objects/analyze` – take a photo (mobile camera) or choose/drop
-  a JPEG/PNG/WebP up to 5 MB; shows the structured report with the risk stamp,
-  confidence, "seen vs inferred" evidence, hazards, precautions, usage and
-  limitations.
-- `POST /api/v1/objects/ask` – follow-up questions, with the context built from
-  the report and clipped to the backend's size limits.
-- Every backend error code (`RATE_LIMITED` with Retry-After, `FILE_TOO_LARGE`,
-  `UNSUPPORTED_TYPE`, `BLOCKED`, `TIMEOUT`, …) is shown as a plain message.
+## Notes
 
-## Layout
-
-```
-src/
-  lib/types.ts       mirrors the backend DTOs
-  lib/api.ts         fetch client, limits, error type
-  components/        Capture (hero/upload), Report, AskPanel
-  App.tsx            state machine: idle → analyzing → done | failed
-  styles.css         tokens, light/dark, responsive
-```
+- Photos over 3.5 MB are resized in the browser before upload (Vercel accepts ~4.5 MB bodies).
+- The rate limit in the Vercel functions is per instance (best-effort); the Java one is per server.
+- `api/_lib/prompts.ts`, `schema.ts` and `safety.ts` are copies of the Java code — keep them in sync.
