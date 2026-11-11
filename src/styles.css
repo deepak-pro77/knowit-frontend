@@ -892,8 +892,27 @@ a {
   color: var(--ink);
 }
 
+.foot__credits {
+  margin-top: 16px;
+  padding-top: 14px;
+  border-top: 1px solid var(--line);
+}
+
+.foot__team {
+  font-family: var(--display);
+  font-weight: 600;
+  font-size: 15px;
+  color: var(--ink);
+}
+
+.foot__school {
+  margin-top: 2px;
+  font-size: 14.5px;
+  color: var(--ink-soft);
+}
+
 .foot__backend {
-  margin-top: 8px;
+  margin-top: 10px;
   font-family: var(--display);
   font-size: 13px;
   color: var(--ink-faint);

@@ -134,6 +134,10 @@ export default function App() {
           KnowIt AI reads a photo and general knowledge. It cannot confirm that anything is safe,
           edible or working. Check the label, the manual, or a qualified person.
         </p>
+        <div className="foot__credits">
+          <p className="foot__team">Developed by Deepak, Basit and Danish</p>
+          <p className="foot__school">Government Boys Higher Secondary School</p>
+        </div>
         <p className="foot__backend">
           Connected to: {backendInfo.label}
           {backendInfo.overridden && (
